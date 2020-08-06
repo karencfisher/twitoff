@@ -7,11 +7,8 @@ twitoff_routes = Blueprint('twitoff_routes', __name__)
 
 @twitoff_routes.route('/users')
 def users():
-    html =  '''
-            <H3>Not Yet Implemented</H3>
-            <a href='index'>Back...</a>
-            '''
-    return html
+    users=User.query.all() 
+    return render_template("show_users.html", Users=users)
 
 @twitoff_routes.route('/add_user')
 def add_user():
