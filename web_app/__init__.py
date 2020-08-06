@@ -5,7 +5,7 @@ from web_app.routes.home_routes import home_routes
 from web_app.routes.twitoff_routes import twitoff_routes
 
 
-DATABASE_URI = 'sqlite:///twitoff_db.sqlite'
+DATABASE_URI = 'sqlite:///db\\twitoff_db.sqlite'
 
 def create_app():
     print('Initializing...')
