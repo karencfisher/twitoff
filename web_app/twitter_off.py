@@ -1,0 +1,57 @@
+from os import getenv
+
+import basilica
+import tweepy  # or twitter_scraper
+from dotenv import load_dotenv
+
+from web_app.db.db_model import db, User, Tweet
+
+
+load_dotenv()
+
+TWITTER_API_KEY = getenv('TWITTER_API_KEY')
+TWITTER_API_SECRET_KEY = getenv('TWITTER_API_SECRET_KEY')
+TWITTER_ACCESS_CODE = getenv('TWITTER_ACCESS_CODE')
+TWITTER_ACCESS_SECRET_CODE = getenv('TWITTER_ACCESS_SECRET_CODE')
+BASILICA_KEY = getenv('BASILICA_KEY')
+
+TWITTER_AUTH = tweepy.OAuthHandler(TWITTER_API_KEY, 
+                                   TWITTER_API_SECRET_KEY)
+TWITTER_AUTH.set_access_token(TWITTER_ACCESS_CODE,
+                              TWITTER_ACCESS_SECRET_CODE)
+Twitter = tweepy.API(TWITTER_AUTH)
+
+Basilica = basilica.Connection(BASILICA_KEY)
+
+def add_twitter_user(username):
+    try:
+        twitter_user = Twitter.get_user(username)
+        db_user = (User.query.get(twitter_user.id) or
+                   User(id=twitter_user.id, user=username))
+        db.session.add(db_user)
+
+        tweets = twitter_user.timeline(count=200,
+                                       exclude_replies=True,
+                                       include_rts=False,
+                                       tweet_mode='extended',
+                                       since_id=db_user.newest_tweet_id)
+
+        if tweets:
+            db_user.newest_tweet_id = tweets[0].id
+
+        for tweet in tweets:
+            embedding = Basilica.embed_sentence(tweet.full_text, 
+                                                model='twitter')
+
+            db_tweet = Tweet(id=tweet.id,
+                             tweet=tweet.full_text[:300],
+                             embedding=embedding)
+            db_user.tweet.append(db_tweet)
+            db.session.add(db_tweet)
+
+    except Exception as err:
+        print('Error processing {}: {}'.format(username, e))
+        raise e
+
+    else:
+        db.session.commit()
