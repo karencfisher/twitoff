@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>TwitOff - {{ title }}</title>
+    <!-- <title>TwitOff - {{ title }}</title> -->
     <link rel="stylesheet" href="https://unpkg.com/picnic"/>
     <script>
         function alertUser(msg) {
@@ -9,11 +9,16 @@
                 alert(msg);
             }
         }
+
+        function displayItem(item, state) {
+            var i = document.getElementById(item)
+            i.style.visibility = state
+        }
     </script>
   </head>
   
 {% block content %}
-<body onload="alertUser({{message}})">
+<body onload="alertUser('{{message}}')">
     <nav>
       <a href="/" class="brand"><span>TwitOff!</span></a>
 
@@ -26,35 +31,65 @@
       </div>
     </nav>
 
-    <article class="flex two" style="padding: 3em 1em;">
+    <article class="flex two" style="padding: 5em 1em;">
       
       <div>
-        <h1>{{ title }}</h1>
-        <p>Select two users to compare:</p>
+        <!-- <h1>Twit Off!</h1> -->
+        <h3>Select two users to compare</h3>
         <form action="/compare" method="post">
           <select name="user1">
             {% for user in users %}
-            <option value="{{ user.user }}">{{ user.user }}</option>
+            <option value="{{ user.user }}">{{user.name}} ({{ user.user }})</option>
             {% endfor %}
           </select>
-          <select name="user2">
+          <select name="user2" style='margin-top: 5px;'>
             {% for user in users %}
-            <option value="{{ user.user }}">{{ user.user }}</option>
+            <option value="{{ user.user }}">{{user.name}} ({{ user.user }})</option>
             {% endfor %}
           </select>
+          <h4>Enter text to predict</h4>
           <input type="text" name="tweet_text" placeholder="Tweet text to predict">
           <input type="submit" value="Compare Users">
         </form>
+
+        {% if result %}
+          <div id='result' style='margin-top: 20px'>
+            <h4>{{result}}</h4>
+          </div>
+        {% endif %}
       </div>
+
       <div>
-        <h2>Twitter Users</h2>
-        {% for user in users %}
+        <h3>Twitter Users</h3>
+        <!--- {% for user in users %}
         <a href="/user/{{ user.user }}"><span class="stack">{{ user.user }}</span></a>
-        {% endfor %}
+        {% endfor %} -->
+
         <form action="/create_user" method="post">
-          <input type="text" name="User" placeholder="User to add">
-          <input type="submit" value="Add User">
+           <input type="text" name="User" placeholder="User to add">
+           <input type="submit" value="Add User">
         </form>
+
+        <form action="/user" method="post" style='margin-top: 10px;'>
+          <select name="User">
+            {% for user in users %}
+              {% if user.user == username %}
+                <option value="{{ user.user }}" selected>{{ user.name }} ({{ user.user }})</option>
+              {% else %}
+                <option value="{{ user.user }}">{{ user.name }} ({{ user.user }})</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+          <input type="submit" value="View Tweets">
+        </form>
+
+        {% if tweets %}
+          <div id='tweets' style='visibility: visible'>
+          <h4>Tweets from {{name}} ({{username}})</h4>
+             <iframe srcdoc='{{tweets}}' style='width: 100%; height: 250px'></iframe>
+             <a onclick="displayItem('tweets', 'hidden')" href='#'>close</a>
+          </div>
+        {% endif %}
       </div>
       
     </article>

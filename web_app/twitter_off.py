@@ -1,7 +1,7 @@
 from os import getenv
 
 import basilica
-import tweepy  # or twitter_scraper
+import tweepy  
 from dotenv import load_dotenv
 
 from web_app.db.db_model import db, User, Tweet
@@ -23,11 +23,13 @@ Twitter = tweepy.API(TWITTER_AUTH)
 
 Basilica = basilica.Connection(BASILICA_KEY)
 
+
 def add_twitter_user(username):
     try:
         twitter_user = Twitter.get_user(username)
         db_user = (User.query.get(twitter_user.id) or
-                   User(id=twitter_user.id, user=username))
+                   User(id=twitter_user.id, user=username, 
+                        name=twitter_user.name))
         db.session.add(db_user)
 
         tweets = twitter_user.timeline(count=200,
@@ -55,3 +57,12 @@ def add_twitter_user(username):
 
     else:
         db.session.commit()
+
+
+def listTweets(tweets):
+    html = '<div>'
+    for tweet in tweets:
+        html += \
+            f'<p class="stack"><li>{tweet.tweet}</li></p>'
+    html += '</div>'
+    return html

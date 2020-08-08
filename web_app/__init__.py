@@ -1,6 +1,6 @@
 from flask import Flask
 
-from web_app.db.db_model import db, migrate
+from web_app.db.db_model import db
 #from web_app.routes.home_routes import home_routes
 from web_app.routes.twitoff_routes import twitoff_routes
 
@@ -14,7 +14,6 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
-    migrate.init_app(app, db)
 
     #app.register_blueprint(home_routes)
     app.register_blueprint(twitoff_routes)
