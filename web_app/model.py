@@ -22,7 +22,7 @@ def predictUser(username1, username2, tweet_text):
                         np.zeros(len(user2.tweet))])
     y = y.reshape(1, -1)
 
-    clf = LogRegression(0.01, 3000, verbose=0)
+    clf = LogRegression(0.05, 1000, verbose=0)
     # clf = LogisticRegression(solver='lbfgs', max_iter=5000)
     clf.fit(X, y)
 

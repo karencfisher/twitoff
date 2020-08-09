@@ -26,13 +26,13 @@ def user():
 def create_user():
     info = dict(request.form)
     try:
-        add_twitter_user(info['User'])
+        count = add_twitter_user(info['User'])
     except Exception as err:
-        message = f"Error adding {info['User']}: {err}"
+        print(f"Error adding {info['User']}: {err}")
     else:
         tweets = User.query.filter(User.user == info['User']).one().tweet
         name = User.query.filter_by(user=info['User']).first().name
-        message = f"You added {info['User']} to users."
+        message = f"You added {info['User']} to users and {count} tweets."
     users=User.query.all()
     return render_template("base.html", users=users, message=message,
                            tweets=listTweets(tweets), username=info['User'],

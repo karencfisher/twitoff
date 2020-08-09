@@ -24,29 +24,50 @@ Twitter = tweepy.API(TWITTER_AUTH)
 Basilica = basilica.Connection(BASILICA_KEY)
 
 
-def add_twitter_user(username):
+def add_twitter_user(username, threshold=500):
     try:
+        # Get user information
         twitter_user = Twitter.get_user(username)
+
+        # If not in database, add it
         db_user = (User.query.get(twitter_user.id) or
                    User(id=twitter_user.id, user=username, 
                         name=twitter_user.name))
         db.session.add(db_user)
-
-        tweets = twitter_user.timeline(count=200,
+        
+        # Get first batch of tweets
+        total_tweets = twitter_user.timeline(count=200,
                                        exclude_replies=True,
                                        include_rts=False,
-                                       tweet_mode='extended',
-                                       since_id=db_user.newest_tweet_id)
+                                       tweet_mode='extended')
 
-        if tweets:
-            db_user.newest_tweet_id = tweets[0].id
+        # Get oldest and newest tweets
+        oldest_tweet = total_tweets[-1].id - 1
+        db_user.newest_tweet_id = total_tweets[0].id
 
-        for tweet in tweets:
+        # Query further back in batches until exceed threshold
+        # or there is no more data to be had
+        while len(total_tweets) < threshold:
+            tweets = twitter_user.timeline(count=200,
+                                        exclude_replies=True,
+                                        include_rts=False,
+                                        tweet_mode='extended',
+                                        max_id=oldest_tweet)
+
+            # No more so exit loop
+            if len(tweets) == 0:
+                break
+
+            total_tweets += tweets
+            oldest_tweet = tweets[-1].id - 1
+
+        # Get embeddings and insert into tweet table
+        for tweet in total_tweets:
             embedding = Basilica.embed_sentence(tweet.full_text, 
                                                 model='twitter')
             db_tweet = Tweet(id=tweet.id,
-                             tweet=tweet.full_text[:300],
-                             embedding=embedding)
+                            tweet=tweet.full_text[:300],
+                            embedding=embedding)
             db_user.tweet.append(db_tweet)
             db.session.add(db_tweet)
 
@@ -54,8 +75,9 @@ def add_twitter_user(username):
         print('Error processing {}: {}'.format(username, e))
         raise e
 
-    else:
-        db.session.commit()
+    db.session.commit()
+    return len(total_tweets)
+    
 
 
 def updateTweets():

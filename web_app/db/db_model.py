@@ -8,7 +8,7 @@ class User(db.Model):
     id = db.Column(db.BigInteger, primary_key=True)
     user = db.Column(db.String(128), nullable=False)
     name = db.Column(db.String(128))
-    newest_tweet_id = db.Column(db.BigInteger, nullable=False)
+    newest_tweet_id = db.Column(db.BigInteger)
 
     def __repr__(self):
         return f'<User {self.id} {self.name}>'
