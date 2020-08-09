@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request
 
 from web_app.db.db_model import db, User
-from web_app.twitter_off import add_twitter_user, listTweets
+from web_app.twitter_off import add_twitter_user, listTweets, updateTweets
+from web_app.model import predictUser
 
 
 twitoff_routes = Blueprint('twitoff_routes', __name__)
@@ -39,15 +40,32 @@ def create_user():
 
 @twitoff_routes.route('/compare', methods=['POST'])
 def compare():
-    message = 'Whoa, not there yet!'
+    info = dict(request.form)
+    user1 = info['user1']
+    user2 = info['user2']
+    result = predictUser(user1, user2, info['tweet_text'])
+    if result == 1:
+        winner = user1
+    else:
+        winner = user2
+    name = User.query.filter_by(user=winner).first().name
+    verdict = f'I predict the tweet would be by {name} ({winner})'
+
     users=User.query.all()
-    return render_template("base.html", users=users, message=message,
-                           result='Stay tuned!')
+    return render_template("base.html", users=users, message='',
+                           result=verdict, tweet=info['tweet_text'],
+                           username1=user1, username2=user2)
 
 @twitoff_routes.route('/update')
 def update():
-    message = 'Whoa, not there yet!'
+    results = updateTweets()
+    result = '<div>'
+    for key in results.keys():
+        result += f'<li>{key} added {results[key]} tweets</li>'
+    result += '</div>'
+
     users=User.query.all()
-    return render_template("base.html", users=users, message=message)
+    return render_template("base.html", users=users, message='',
+                            updates=result)
                
 

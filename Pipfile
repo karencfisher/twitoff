@@ -13,6 +13,8 @@ basilica = "*"
 twitter-scraper = "*"
 python-dotenv = "*"
 tweepy = "*"
+numpy = "*"
+scikit-learn = "*"
 
 [requires]
 python_version = "3.7"

@@ -44,7 +44,6 @@ def add_twitter_user(username):
         for tweet in tweets:
             embedding = Basilica.embed_sentence(tweet.full_text, 
                                                 model='twitter')
-
             db_tweet = Tweet(id=tweet.id,
                              tweet=tweet.full_text[:300],
                              embedding=embedding)
@@ -57,6 +56,34 @@ def add_twitter_user(username):
 
     else:
         db.session.commit()
+
+
+def updateTweets():
+    users = User.query.all()
+    updates = {}
+    for user in users:
+        last_tweet = user.newest_tweet_id
+        twitter_user = Twitter.get_user(user.user)
+        tweets = twitter_user.timeline(count=200,
+                                       exclude_replies=True,
+                                       include_rts=False,
+                                       tweet_mode='extended',
+                                       since_id=last_tweet)
+        
+        if tweets:
+            user.newest_tweet_id = tweets[0].id
+        updates[user.user] = len(tweets)
+
+        for tweet in tweets:
+            embedding = Basilica.embed_sentence(tweet.full_text, 
+                                                model='twitter')
+            db_tweet = Tweet(id=tweet.id,
+                             tweet=tweet.full_text[:300],
+                             embedding=embedding)
+            user.tweet.append(db_tweet)
+            db.session.add(db_tweet)
+    db.session.commit()
+    return updates
 
 
 def listTweets(tweets):

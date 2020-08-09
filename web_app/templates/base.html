@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <!-- <title>TwitOff - {{ title }}</title> -->
     <link rel="stylesheet" href="https://unpkg.com/picnic"/>
     <script>
         function alertUser(msg) {
@@ -34,21 +33,28 @@
     <article class="flex two" style="padding: 5em 1em;">
       
       <div>
-        <!-- <h1>Twit Off!</h1> -->
         <h3>Select two users to compare</h3>
         <form action="/compare" method="post">
           <select name="user1">
             {% for user in users %}
-            <option value="{{ user.user }}">{{user.name}} ({{ user.user }})</option>
+            {% if user.user == username1 %}
+              <option value="{{ user.user }}" selected>{{user.name}} ({{ user.user }})</option>
+            {% else %}
+              <option value="{{ user.user }}">{{user.name}} ({{ user.user }})</option>
+            {% endif %}
             {% endfor %}
           </select>
           <select name="user2" style='margin-top: 5px;'>
             {% for user in users %}
-            <option value="{{ user.user }}">{{user.name}} ({{ user.user }})</option>
+            {% if user.user == username2 %}
+              <option value="{{ user.user }}" selected>{{user.name}} ({{ user.user }})</option>
+            {% else %}
+              <option value="{{ user.user }}">{{user.name}} ({{ user.user }})</option>
+            {% endif %}
             {% endfor %}
           </select>
           <h4>Enter text to predict</h4>
-          <input type="text" name="tweet_text" placeholder="Tweet text to predict">
+          <input id='tweet' type="text" name="tweet_text" placeholder="Tweet text to predict">
           <input type="submit" value="Compare Users">
         </form>
 
@@ -56,15 +62,15 @@
           <div id='result' style='margin-top: 20px'>
             <h4>{{result}}</h4>
           </div>
+          <script type="text/javascript"> 
+            document.getElementById("tweet").setAttribute('value','{{tweet}}');
+          </script>
         {% endif %}
       </div>
 
       <div>
         <h3>Twitter Users</h3>
-        <!--- {% for user in users %}
-        <a href="/user/{{ user.user }}"><span class="stack">{{ user.user }}</span></a>
-        {% endfor %} -->
-
+        
         <form action="/create_user" method="post">
            <input type="text" name="User" placeholder="User to add">
            <input type="submit" value="Add User">
@@ -89,7 +95,14 @@
              <iframe srcdoc='{{tweets}}' style='width: 100%; height: 250px'></iframe>
              <a onclick="displayItem('tweets', 'hidden')" href='#'>close</a>
           </div>
+        {% elif updates %}
+        <div id='tweets' style='visibility: visible'>
+          <h4>Tweet Updates</h4>
+             <iframe srcdoc='{{updates}}' style='width: 100%; height: 250px'></iframe>
+             <a onclick="displayItem('tweets', 'hidden')" href='#'>close</a>
+          </div>
         {% endif %}
+
       </div>
       
     </article>
