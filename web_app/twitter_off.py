@@ -28,57 +28,56 @@ def add_twitter_user(username, threshold=500):
     try:
         # Get user information
         twitter_user = Twitter.get_user(username)
+    except tweepy.TweepError as err:
+        raise Exception(f'{username} not found.')
 
-        # If not in database, add it
-        db_user = (User.query.get(twitter_user.id) or
-                   User(id=twitter_user.id, user=username, 
-                        name=twitter_user.name))
-        db.session.add(db_user)
-        
-        # Get first batch of tweets
-        total_tweets = twitter_user.timeline(count=200,
-                                       exclude_replies=True,
-                                       include_rts=False,
-                                       tweet_mode='extended')
+    # Check if it already exists in the DB
+    if User.query.get(twitter_user.id) is not None:
+        return 0
 
-        # Get oldest and newest tweets
-        oldest_tweet = total_tweets[-1].id - 1
-        db_user.newest_tweet_id = total_tweets[0].id
+    db_user = User(id=twitter_user.id, user=username,
+                    name=twitter_user.name)
+    db.session.add(db_user)
+    
+    # Get first batch of tweets
+    total_tweets = twitter_user.timeline(count=200,
+                                    exclude_replies=True,
+                                    include_rts=False,
+                                    tweet_mode='extended')
 
-        # Query further back in batches until exceed threshold
-        # or there is no more data to be had
-        while len(total_tweets) < threshold:
-            tweets = twitter_user.timeline(count=200,
-                                        exclude_replies=True,
-                                        include_rts=False,
-                                        tweet_mode='extended',
-                                        max_id=oldest_tweet)
+    # Get oldest and newest tweets
+    oldest_tweet = total_tweets[-1].id - 1
+    db_user.newest_tweet_id = total_tweets[0].id
 
-            # No more so exit loop
-            if len(tweets) == 0:
-                break
+    # Query further back in batches until exceed threshold
+    # or there is no more data to be had
+    while len(total_tweets) < threshold:
+        tweets = twitter_user.timeline(count=200,
+                                    exclude_replies=True,
+                                    include_rts=False,
+                                    tweet_mode='extended',
+                                    max_id=oldest_tweet)
 
-            total_tweets += tweets
-            oldest_tweet = tweets[-1].id - 1
+        # No more so exit loop
+        if len(tweets) == 0:
+            break
 
-        # Get embeddings and insert into tweet table
-        for tweet in total_tweets:
-            embedding = Basilica.embed_sentence(tweet.full_text, 
-                                                model='twitter')
-            db_tweet = Tweet(id=tweet.id,
-                            tweet=tweet.full_text[:300],
-                            embedding=embedding)
-            db_user.tweet.append(db_tweet)
-            db.session.add(db_tweet)
+        total_tweets += tweets
+        oldest_tweet = tweets[-1].id - 1
 
-    except Exception as err:
-        print('Error processing {}: {}'.format(username, e))
-        raise e
+    # Get embeddings and insert into tweet table
+    for tweet in total_tweets:
+        embedding = Basilica.embed_sentence(tweet.full_text, 
+                                            model='twitter')
+        db_tweet = Tweet(id=tweet.id,
+                        tweet=tweet.full_text[:300],
+                        embedding=embedding)
+        db_user.tweet.append(db_tweet)
+        db.session.add(db_tweet)
 
     db.session.commit()
     return len(total_tweets)
     
-
 
 def updateTweets():
     users = User.query.all()

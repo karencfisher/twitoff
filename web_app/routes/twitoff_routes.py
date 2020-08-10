@@ -1,6 +1,7 @@
+import numpy as np
 from flask import Blueprint, render_template, request
 
-from web_app.db.db_model import db, User
+from web_app.db.db_model import db, User, Tweet
 from web_app.twitter_off import add_twitter_user, listTweets, updateTweets
 from web_app.model import predictUser
 
@@ -15,7 +16,8 @@ def users():
 @twitoff_routes.route('/user', methods=['POST'])
 def user():
     user = dict(request.form)['User']
-    tweets = User.query.filter(User.user == user).one().tweet
+    tweets = Tweet.query.join(User).filter(User.user == user).\
+        order_by(Tweet.id.desc())
     name = User.query.filter_by(user=user).first().name
     users=User.query.all()
     return render_template("base.html", users=users, message='',
@@ -29,10 +31,15 @@ def create_user():
         count = add_twitter_user(info['User'])
     except Exception as err:
         print(f"Error adding {info['User']}: {err}")
+        return errorMsg(err)
     else:
-        tweets = User.query.filter(User.user == info['User']).one().tweet
+        tweets = Tweet.query.join(User).filter(User.user == info['User']).\
+            order_by(Tweet.id.desc())
         name = User.query.filter_by(user=info['User']).first().name
-        message = f"You added {info['User']} to users and {count} tweets."
+        if count == 0:
+            message = f"{info['User']} is already in the database."
+        else:
+            message = f"You added {info['User']} to users and {count} tweets."
     users=User.query.all()
     return render_template("base.html", users=users, message=message,
                            tweets=listTweets(tweets), username=info['User'],
@@ -43,13 +50,13 @@ def compare():
     info = dict(request.form)
     user1 = info['user1']
     user2 = info['user2']
+    contest = (user1, user2)
     result = predictUser(user1, user2, info['tweet_text'])
-    if result == 1:
-        winner = user1
-    else:
-        winner = user2
+    winner = contest[np.argmax(result)]
+    score = round(result[np.argmax(result)], 2)
     name = User.query.filter_by(user=winner).first().name
-    verdict = f'I predict the tweet would be by {name} ({winner})'
+    verdict = \
+        f'Probability is that {name} ({winner}) said this by {score * 100} %'
 
     users=User.query.all()
     return render_template("base.html", users=users, message='',
@@ -68,4 +75,9 @@ def update():
     return render_template("base.html", users=users, message='',
                             updates=result)
                
+def errorMsg(err):
+    message = f'An error occured. {err}'
+    users=User.query.all() 
+    return render_template("base.html", users=users, message=message)
+    
 

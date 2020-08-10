@@ -1,35 +1,27 @@
 import numpy as np
+
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import LabelEncoder
 
 from web_app.db.db_model import db, User, Tweet
-from web_app.log_regression import LogRegression
 from web_app.twitter_off import Basilica
 
 
 def predictUser(username1, username2, tweet_text):
-    user1 = User.query.filter(User.user == username1).one()
-    user2 = User.query.filter(User.user == username2).one()
+    data = Tweet.query.join(User).with_entities(User.user, Tweet.embedding).\
+        filter(User.user.in_((username1, username2))).all()
+    X = [data[i][1] for i in range(len(data))]
+    y = [data[i][0] for i in range(len(data))]
 
-    user1_embeds = \
-        np.array([tweet.embedding for tweet in user1.tweet])
-    user2_embeds = \
-        np.array([tweet.embedding for tweet in user2.tweet])
-
-    # X = np.vstack([user1_embeds, user2_embeds])
-    X = np.vstack([user1_embeds, user2_embeds]).T
-
-    y = np.concatenate([np.ones(len(user1.tweet)), 
-                        np.zeros(len(user2.tweet))])
-    y = y.reshape(1, -1)
-
-    clf = LogRegression(0.05, 1000, verbose=0)
-    # clf = LogisticRegression(solver='lbfgs', max_iter=5000)
+    le = LabelEncoder()
+    y = le.fit_transform(y)
+    
+    clf = LogisticRegression(solver='lbfgs', max_iter=5000)
     clf.fit(X, y)
 
     embed = np.array(Basilica.embed_sentence(tweet_text, model='twitter'))
-    # x = embed.reshape(1, -1)
-    x = embed.reshape(-1, 1)
-    result = clf.predict(x)
+    x = embed.reshape(1, -1)
+    result = clf.predict_proba(x)
 
     return np.squeeze(result)
     
