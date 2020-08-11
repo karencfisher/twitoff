@@ -50,12 +50,15 @@ def compare():
     info = dict(request.form)
     user1 = info['user1']
     user2 = info['user2']
-    result, contest = predictUser(user1, user2, info['tweet_text'])
-    winner = contest[np.argmax(result)]
-    score = round(result[np.argmax(result)], 2)
-    name = User.query.filter_by(user=winner).first().name
-    verdict = \
-        f'Probability is that {name} ({winner}) said this by {score * 100} %'
+    if user1 == user2:
+        verdict = 'Choose different users to compare!'
+    else:
+        result, contest = predictUser(user1, user2, info['tweet_text'])
+        winner = contest[np.argmax(result)]
+        score = round(result[np.argmax(result)], 2)
+        name = User.query.filter_by(user=winner).first().name
+        verdict = \
+            f'Probability is that {name} ({winner}) said this by {score * 100} %'
 
     users=User.query.all()
     return render_template("base.html", users=users, message='',

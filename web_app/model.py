@@ -15,7 +15,7 @@ def predictUser(username1, username2, tweet_text):
 
     le = LabelEncoder()
     y = le.fit_transform(y)
-    
+
     clf = LogisticRegression(solver='lbfgs', max_iter=5000)
     clf.fit(X, y)
 
