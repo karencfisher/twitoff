@@ -83,19 +83,48 @@ def updateTweets():
     users = User.query.all()
     updates = {}
     for user in users:
+        updates[user.user] = 0
         last_tweet = user.newest_tweet_id
+
+        # Get first new batch
         twitter_user = Twitter.get_user(user.user)
-        tweets = twitter_user.timeline(count=200,
+        total_tweets = twitter_user.timeline(count=200,
                                        exclude_replies=True,
                                        include_rts=False,
                                        tweet_mode='extended',
                                        since_id=last_tweet)
         
-        if tweets:
-            user.newest_tweet_id = tweets[0].id
-        updates[user.user] = len(tweets)
+        # If no new tweets for user, go to the next user
+        if len(total_tweets) == 0:
+            continue
 
-        for tweet in tweets:
+        # Cache the newest and oldest
+        user.newest_tweet_id = total_tweets[0].id
+        oldest_tweet = total_tweets[-1].id - 1
+
+        # Are there more new tweets to be had?
+        while True:
+            tweets = twitter_user.timeline(count=200,
+                                        exclude_replies=True,
+                                        include_rts=False,
+                                        tweet_mode='extended',
+                                        max_id=oldest_tweet,
+                                        since_id=last_tweet)
+
+            # No more so exit loop
+            if len(tweets) == 0:
+                break
+
+            # Accumulate new batch and track oldest
+            total_tweets += tweets
+            oldest_tweet = tweets[-1].id - 1
+
+        for tweet in total_tweets:
+            # Extra caution not to duplicate tweets and trigger DB exception
+            if tweet.id <= last_tweet:
+                break
+
+            # get embedding and add to DB
             embedding = Basilica.embed_sentence(tweet.full_text, 
                                                 model='twitter')
             db_tweet = Tweet(id=tweet.id,
@@ -103,6 +132,9 @@ def updateTweets():
                              embedding=embedding)
             user.tweet.append(db_tweet)
             db.session.add(db_tweet)
+
+        updates[user.user] = len(total_tweets)
+
     db.session.commit()
     return updates
 
