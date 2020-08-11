@@ -23,6 +23,6 @@ def predictUser(username1, username2, tweet_text):
     x = embed.reshape(1, -1)
     result = clf.predict_proba(x)
 
-    return np.squeeze(result)
+    return np.squeeze(result), le.classes_
     
   
