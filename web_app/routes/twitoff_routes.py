@@ -1,3 +1,5 @@
+import html
+
 import numpy as np
 from flask import Blueprint, render_template, request
 
@@ -50,10 +52,11 @@ def compare():
     info = dict(request.form)
     user1 = info['user1']
     user2 = info['user2']
+    text = html.unescape(info['tweet_text'])
     if user1 == user2:
         verdict = 'Choose different users to compare!'
     else:
-        result, contest = predictUser(user1, user2, info['tweet_text'])
+        result, contest = predictUser(user1, user2, text)
         winner = contest[np.argmax(result)]
         score = round(result[np.argmax(result)], 2)
         name = User.query.filter_by(user=winner).first().name
@@ -62,7 +65,7 @@ def compare():
 
     users=User.query.all()
     return render_template("base.html", users=users, message='',
-                           result=verdict, tweet=info['tweet_text'],
+                           result=verdict, tweet=text,
                            username1=user1, username2=user2)
 
 @twitoff_routes.route('/update')

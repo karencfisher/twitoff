@@ -54,7 +54,11 @@
             {% endfor %}
           </select>
           <h4>Enter text to predict</h4>
-          <input id='tweet' type="text" name="tweet_text" placeholder="Tweet text to predict">
+          {% if result %}
+            <input id='tweet' type="text" name="tweet_text" value='{{tweet}}'>
+          {% else %}
+            <input id='tweet' type="text" name="tweet_text" placeholder="Tweet text to predict">
+          {% endif %}
           <input type="submit" value="Compare Users">
         </form>
 
@@ -62,9 +66,7 @@
           <div id='result' style='margin-top: 20px'>
             <h4>{{result}}</h4>
           </div>
-          <script type="text/javascript"> 
-            document.getElementById("tweet").setAttribute('value','{{tweet}}');
-          </script>
+          
         {% endif %}
       </div>
 
