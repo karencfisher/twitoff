@@ -55,6 +55,7 @@ def compare():
     text = html.unescape(info['tweet_text'])
     if user1 == user2:
         verdict = 'Choose different users to compare!'
+        message = 'Choose different users to compare!'
     else:
         result, contest = predictUser(user1, user2, text)
         winner = contest[np.argmax(result)]
@@ -62,9 +63,10 @@ def compare():
         name = User.query.filter_by(user=winner).first().name
         verdict = \
             f'Probability is that {name} ({winner}) said this by {score * 100} %'
+        message = ''
 
     users=User.query.all()
-    return render_template("base.html", users=users, message='',
+    return render_template("base.html", users=users, message=message,
                            result=verdict, tweet=text,
                            username1=user1, username2=user2)
 
