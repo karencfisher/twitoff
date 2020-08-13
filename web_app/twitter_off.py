@@ -51,19 +51,19 @@ def add_twitter_user(username, threshold=200):
 
     # Query further back in batches until exceed threshold
     # or there is no more data to be had
-    while len(total_tweets) < threshold:
-        tweets = twitter_user.timeline(count=200,
-                                    exclude_replies=True,
-                                    include_rts=False,
-                                    tweet_mode='extended',
-                                    max_id=oldest_tweet)
+    # while len(total_tweets) < threshold:
+    #     tweets = twitter_user.timeline(count=200,
+    #                                 exclude_replies=True,
+    #                                 include_rts=False,
+    #                                 tweet_mode='extended',
+    #                                 max_id=oldest_tweet)
 
-        # No more so exit loop
-        if len(tweets) == 0:
-            break
+    #     # No more so exit loop
+    #     if len(tweets) == 0:
+    #         break
 
-        total_tweets += tweets
-        oldest_tweet = tweets[-1].id - 1
+    #     total_tweets += tweets
+    #     oldest_tweet = tweets[-1].id - 1
 
     # Get embeddings and insert into tweet table
     for tweet in total_tweets:
