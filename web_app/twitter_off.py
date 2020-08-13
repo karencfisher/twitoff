@@ -24,7 +24,7 @@ Twitter = tweepy.API(TWITTER_AUTH)
 Basilica = basilica.Connection(BASILICA_KEY)
 
 
-def add_twitter_user(username, threshold=500):
+def add_twitter_user(username, threshold=200):
     try:
         # Get user information
         twitter_user = Twitter.get_user(username)
@@ -101,23 +101,6 @@ def updateTweets():
         # Cache the newest and oldest
         user.newest_tweet_id = total_tweets[0].id
         oldest_tweet = total_tweets[-1].id - 1
-
-        # Are there more new tweets to be had?
-        while True:
-            tweets = twitter_user.timeline(count=200,
-                                        exclude_replies=True,
-                                        include_rts=False,
-                                        tweet_mode='extended',
-                                        max_id=oldest_tweet,
-                                        since_id=last_tweet)
-
-            # No more so exit loop
-            if len(tweets) == 0:
-                break
-
-            # Accumulate new batch and track oldest
-            total_tweets += tweets
-            oldest_tweet = tweets[-1].id - 1
 
         for tweet in total_tweets:
             # Extra caution not to duplicate tweets and trigger DB exception
