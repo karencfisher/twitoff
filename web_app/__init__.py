@@ -1,7 +1,6 @@
 from flask import Flask
 
 from web_app.db.db_model import db
-#from web_app.routes.home_routes import home_routes
 from web_app.routes.twitoff_routes import twitoff_routes
 
 
