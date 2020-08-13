@@ -1,16 +1,18 @@
 from flask import Flask
+from dotenv import load_dotenv
 
 from web_app.db.db_model import db
 from web_app.routes.twitoff_routes import twitoff_routes
 
-
+load_dotenv()
 DATABASE_URI = 'sqlite:///db\\twitoff_db.sqlite'
+DB_URL = getenv('DB_URL')
 
 def create_app():
     print('Initializing...')
     app = Flask(__name__)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
+    app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
 
