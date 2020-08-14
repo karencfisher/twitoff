@@ -1,4 +1,5 @@
 from os import getenv
+import threading
 
 import basilica
 import tweepy  
@@ -45,7 +46,8 @@ def add_twitter_user(username):
     # Call worker to fetch tweets in background
     # q = Queue(connection=conn)
     # q.enqueue(fetch_tweets, (twitter_user, db_user))
-    fetch_tweets((twitter_user, db_user))
+    th = threading.Thread(target=fetch_tweets, args=((twitter_user, db_user),))
+    th.start()
     return False
 
 
@@ -92,22 +94,25 @@ def fetch_tweets(twitter_user, threshold=200, last_tweet=1):
         # No more so exit loop
         if len(tweets) == 0:
             break
-
+        
         total_tweets += tweets
         oldest_tweet = tweets[-1].id - 1
+        tweets_found = len(total_tweets)
+        print(f'{tweets_found} tweets found for {twitter_user[0].screen_name}.')
 
     # Get embeddings and insert into tweet table
     for tweet in total_tweets:
         tweets_found -= 1
         if tweets_found % 10 == 0:
-            print(f'{tweets_found} left to process.')
+            print(f'{tweets_found} tweets left to process.')
+
         embedding = Basilica.embed_sentence(tweet.full_text, 
                                             model='twitter')
         db_tweet = Tweet(id=tweet.id,
                         tweet=tweet.full_text[:300],
                         embedding=embedding)
         twitter_user[1].tweet.append(db_tweet)
-        db.session.add(twitter_user[1])
+        db.session.add(db_tweet)
 
     db.session.commit()
     return len(total_tweets)

@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href="https://unpkg.com/picnic"/>
 </head>
 <body>
+    <nav>
+        <a href="#" class="brand"><span>TwitOff!</span></a>
+    </nav>
     {% block content %}
-        <h1>Fetching tweets for {{user}}</h1>
-        <h3>This may take a few moments, please be patient.</h3>
+    <div style="padding: 5em 1em;">
+        <h2>Fetching tweets for {{user}}</h2>
+        <h4>This may take a few moments, please be patient.</h4>
     
         <script>
             setTimeout(function(){
                window.location.href = '/waiting/{{user}}';
             }, 3000);
          </script>
+    </div>
     {% endblock %}
 </body>
 </html>

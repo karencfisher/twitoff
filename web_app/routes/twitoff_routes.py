@@ -97,10 +97,10 @@ def waiting(username):
         message = f'{username} added {count_tweets} tweets'
         tweets = Tweet.query.join(User).filter(User.user == username).\
             order_by(Tweet.id.desc())
-        name = User.query.filter_by(user=user).first().name
+        name = User.query.filter_by(user=username).first().name
         users=User.query.all()
         return render_template("base.html", users=users, message=message,
-                                tweets=listTweets(tweets), username=user,
+                                tweets=listTweets(tweets), username=username,
                                 name=name)
     else:
         return render_template("waiting.html", user=username)

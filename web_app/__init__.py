@@ -18,6 +18,7 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
+    db.app = app
 
     #app.register_blueprint(home_routes)
     app.register_blueprint(twitoff_routes)
