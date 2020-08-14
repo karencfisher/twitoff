@@ -8,6 +8,7 @@ from web_app.twitter_off import add_twitter_user, listTweets, updateTweets
 from web_app.model import predictUser
 
 
+
 twitoff_routes = Blueprint('twitoff_routes', __name__)
 
 @twitoff_routes.route('/')
@@ -37,15 +38,15 @@ def create_user():
     else:
         if already_exists:
             message = f"{info['User']} is already in the database."
-            tweets = Tweet.query.join(User).filter(User.user == user).\
+            tweets = Tweet.query.join(User).filter(User.user == info['User']).\
                 order_by(Tweet.id.desc())
+            name = User.query.filter_by(user=info['User']).first().name
             users=User.query.all()
             return render_template("base.html", users=users, message=message,
                            tweets=listTweets(tweets), username=info['User'],
                            name=name)
         else:
-            return render_template("waiting.html", count_tweets=0, 
-                                   user=info['User'])
+            return render_template(f"waiting.html", user=info['User'])
     
 
 @twitoff_routes.route('/compare', methods=['POST'])
@@ -87,13 +88,22 @@ def update():
 def waiting(username):
     count_tweets = 0
     try:
-        tweets = Tweet.query.join(User).filter(User.user == info['User']).\
+        count_tweets = Tweet.query.join(User).filter(User.user == username).\
             count()
-        count_tweets = tweets
     except:
         pass
-    return render_template("waiting.html", count_tweets=count_tweets,
-                           user=username))
+
+    if count_tweets > 0:
+        message = f'{username} added {count_tweets} tweets'
+        tweets = Tweet.query.join(User).filter(User.user == username).\
+            order_by(Tweet.id.desc())
+        name = User.query.filter_by(user=user).first().name
+        users=User.query.all()
+        return render_template("base.html", users=users, message=message,
+                                tweets=listTweets(tweets), username=user,
+                                name=name)
+    else:
+        return render_template("waiting.html", user=username)
                
 
 def errorMsg(err):

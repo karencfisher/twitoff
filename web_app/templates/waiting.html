@@ -7,30 +7,14 @@
 </head>
 <body>
     {% block content %}
-        <h3>Fetching tweets for {{username}}</h3>
-        <h5>This may take a few moments, please be patient.</h5>
+        <h1>Fetching tweets for {{user}}</h1>
+        <h3>This may take a few moments, please be patient.</h3>
     
-        {% if count_tweets > 0 %}
-            <script>
-                var form = document.createElement("form");
-                form.method = 'post';
-                form.action = '/user';
-                var input = document.createElement('input');
-                input.type = "hidden";
-                input.name = "data";
-                input.value = "{{user}}";
-                form.appendChild(input);
-                form.submit();
-            </script>
-
-        {% else %}
         <script>
             setTimeout(function(){
                window.location.href = '/waiting/{{user}}';
-            }, 5000);
+            }, 3000);
          </script>
-        {% endif %}
-
     {% endblock %}
 </body>
 </html>
