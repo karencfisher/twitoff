@@ -3,8 +3,10 @@ from os import getenv
 import basilica
 import tweepy  
 from dotenv import load_dotenv
+from rq import Queue
 
 from web_app.db.db_model import db, User, Tweet
+from web_app.worker import conn
 
 
 load_dotenv()
@@ -33,14 +35,22 @@ def add_twitter_user(username, threshold=200):
 
     # Check if it already exists in the DB
     if User.query.get(twitter_user.id) is not None:
-        return 0
+        return True
 
+    # Add user to DB
     db_user = User(id=twitter_user.id, user=username,
                     name=twitter_user.name)
     db.session.add(db_user)
+
+    # Call worker to fetch tweets in background
+    q = Queue(connection=conn)
+    q.enqueue(fetch_tweets, twitter_user)
+    return False
     
+    
+def fetch_tweets(twitter_user):
     # Get first batch of tweets
-    total_tweets = twitter_user.timeline(count=50,
+    total_tweets = twitter_user.timeline(count=200,
                                     exclude_replies=True,
                                     include_rts=False,
                                     tweet_mode='extended')
@@ -52,7 +62,7 @@ def add_twitter_user(username, threshold=200):
     # Query further back in batches until exceed threshold
     # or there is no more data to be had
     while len(total_tweets) < threshold:
-        tweets = twitter_user.timeline(count=50,
+        tweets = twitter_user.timeline(count=200,
                                     exclude_replies=True,
                                     include_rts=False,
                                     tweet_mode='extended',
@@ -76,7 +86,6 @@ def add_twitter_user(username, threshold=200):
         db.session.add(db_tweet)
 
     db.session.commit()
-    return len(total_tweets)
     
 
 def updateTweets():

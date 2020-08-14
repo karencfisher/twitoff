@@ -30,22 +30,23 @@ def user():
 def create_user():
     info = dict(request.form)
     try:
-        count = add_twitter_user(info['User'])
+        already_exists = add_twitter_user(info['User'])
     except Exception as err:
         print(f"Error adding {info['User']}: {err}")
         return errorMsg(err)
     else:
-        tweets = Tweet.query.join(User).filter(User.user == info['User']).\
-            order_by(Tweet.id.desc())
-        name = User.query.filter_by(user=info['User']).first().name
-        if count == 0:
+        if already_exists:
             message = f"{info['User']} is already in the database."
-        else:
-            message = f"You added {info['User']} to users and {count} tweets."
-    users=User.query.all()
-    return render_template("base.html", users=users, message=message,
+            tweets = Tweet.query.join(User).filter(User.user == user).\
+                order_by(Tweet.id.desc())
+            users=User.query.all()
+            return render_template("base.html", users=users, message=message,
                            tweets=listTweets(tweets), username=info['User'],
                            name=name)
+        else:
+            return render_template("waiting.html", count_tweets=0, 
+                                   user=info['User'])
+    
 
 @twitoff_routes.route('/compare', methods=['POST'])
 def compare():
@@ -81,7 +82,20 @@ def update():
     users=User.query.all()
     return render_template("base.html", users=users, message='',
                             updates=result)
+
+@twitoff_routes.route('/waiting/<username>')
+def waiting(username):
+    count_tweets = 0
+    try:
+        tweets = Tweet.query.join(User).filter(User.user == info['User']).\
+            count()
+        count_tweets = tweets
+    except:
+        pass
+    return render_template("waiting.html", count_tweets=count_tweets,
+                           user=username))
                
+
 def errorMsg(err):
     message = f'An error occured. {err}'
     users=User.query.all() 
