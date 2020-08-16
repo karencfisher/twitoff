@@ -40,7 +40,11 @@ def create_user():
             message = f"{info['User']} is already in the database."
             tweets = Tweet.query.join(User).filter(User.user == info['User']).\
                 order_by(Tweet.id.desc())
-            name = User.query.filter_by(user=info['User']).first().name
+            try:
+                name = User.query.filter_by(user=info['User']).first().name
+            except AttributeError:
+                message = f"{info['User']} not found. Check spelling and capitalization?"
+                name = '<unknown>'
             users=User.query.all()
             return render_template("base.html", users=users, message=message,
                            tweets=listTweets(tweets), username=info['User'],
