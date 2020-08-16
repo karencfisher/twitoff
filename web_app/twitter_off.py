@@ -44,10 +44,10 @@ def add_twitter_user(username):
     db.session.add(db_user)
 
     # Call worker to fetch tweets in background
-    q = Queue(connection=conn)
-    q.enqueue(fetch_tweets, (twitter_user, db_user))
-    # th = threading.Thread(target=fetch_tweets, args=((twitter_user, db_user),))
-    # th.start()
+    # q = Queue(connection=conn)
+    # q.enqueue(fetch_tweets, (twitter_user, db_user))
+    th = threading.Thread(target=fetch_tweets, args=((twitter_user, db_user),))
+    th.start()
     return False
 
 
