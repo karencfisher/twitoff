@@ -57,7 +57,11 @@ def updateTweets():
     for user in users:
         updates[user.user] = 0
         last_tweet = user.newest_tweet_id
-        twitter_user = Twitter.get_user(user.user)
+        try:
+            twitter_user = Twitter.get_user(user.user)
+        except tweepy.TweepError:
+            updates[user.user] = -1
+            continue
         updates[user.user] = \
             fetch_tweets((twitter_user, user), last_tweet=last_tweet)
 

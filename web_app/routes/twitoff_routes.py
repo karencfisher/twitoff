@@ -81,7 +81,10 @@ def update():
     results = updateTweets()
     result = '<div>'
     for key in results.keys():
-        result += f'<li>{key} added {results[key]} tweets</li>'
+        if results[key] == -1:
+            result += f'<li>{key}: user is no longer found'
+        else:
+            result += f'<li>{key} added {results[key]} tweets</li>'
     result += '</div>'
 
     users=User.query.all()
